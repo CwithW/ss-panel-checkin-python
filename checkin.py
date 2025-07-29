@@ -33,7 +33,7 @@ class Checkin:
                 raise Exception(f"Login API {resp.status_code}: {resp.text}")
             login_resp = resp.json()
             if login_resp.get("ret") != 1:
-                raise Exception("Login failed")
+                raise Exception(f"Login failed: {str(login_resp)}")
             logger.info("Login successful")
             return True
         except Exception as e:
