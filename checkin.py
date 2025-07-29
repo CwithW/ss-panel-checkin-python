@@ -5,6 +5,7 @@ import urllib3
 import hashlib
 import os
 import traceback
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class Checkin:
             return False
         # <input type="hidden" name="csrf_token" value="2WC0Df0RkADO8MKxy3TRLvuFtgQZa1BCiTmUEVRnarcnUCVKtOtZt82dRBcj8DUv">
         regex_for_csrf_token = r'<input type="hidden" name="csrf_token" value="([^"]+)">'
-        csrf_token = regex_for_csrf_token.search(resp.text)
+        csrf_token = re.search(regex_for_csrf_token, resp.text)
         if csrf_token:
             csrf_token = csrf_token.group(1)
             logger.info(f"CSRF token found: {csrf_token}")
