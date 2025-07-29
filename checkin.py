@@ -20,13 +20,31 @@ class Checkin:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"})
         self.session.verify = not insecure
-
+    def get_csrf(self):
+        url = f"{self.host}/auth/login"
+        resp = self.session.get(url)
+        if not "PHPSESSID" in resp.cookies: # no session means no csrf
+            logger.info("CSRF token not found, no session established")
+            return False
+        # <input type="hidden" name="csrf_token" value="2WC0Df0RkADO8MKxy3TRLvuFtgQZa1BCiTmUEVRnarcnUCVKtOtZt82dRBcj8DUv">
+        regex_for_csrf_token = r'<input type="hidden" name="csrf_token" value="([^"]+)">'
+        csrf_token = regex_for_csrf_token.search(resp.text)
+        if csrf_token:
+            csrf_token = csrf_token.group(1)
+            logger.info(f"CSRF token found: {csrf_token}")
+            return csrf_token
+        logger.info("CSRF token not found in the response")
+        return False
     def login(self):
         url = f"{self.host}/auth/login"
         data = {
             "email": self.email,
-            "passwd": self.passwd
+            "passwd": self.passwd,
+            "remember_me":"week",
         }
+        csrf_token = self.get_csrf()
+        if csrf_token:
+            data["csrf_token"] = csrf_token
         try:
             resp = self.session.post(url, data=data)
             if resp.status_code != 200:
